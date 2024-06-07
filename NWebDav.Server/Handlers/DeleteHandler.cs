@@ -30,7 +30,7 @@ public class DeleteHandler : IRequestHandler
         _store = store;
         _lockingManager = lockingManager;
     }
-    
+
     /// <summary>
     /// Handle a DELETE request.
     /// </summary>
@@ -52,6 +52,12 @@ public class DeleteHandler : IRequestHandler
 
         // We should always remove the item from a parent container
         var splitUri = RequestHelper.SplitUri(request.GetUri());
+        if (splitUri is null)
+        {
+            // Source not found
+            response.SetStatus(DavStatusCode.BadRequest);
+            return true;
+        }
 
         // Obtain parent collection
         var parentCollection = await _store.GetCollectionAsync(splitUri.CollectionUri, httpContext.RequestAborted).ConfigureAwait(false);

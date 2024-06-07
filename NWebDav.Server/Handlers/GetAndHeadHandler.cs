@@ -28,7 +28,7 @@ public class GetAndHeadHandler : IRequestHandler
     {
         _store = store;
     }
-    
+
     /// <summary>
     /// Handle a GET or HEAD request.
     /// </summary>
@@ -114,7 +114,7 @@ public class GetAndHeadHandler : IRequestHandler
                         if (range?.If != null && propertyManager != null)
                         {
                             var lastModifiedText = (string?)await propertyManager.GetPropertyAsync(entry, DavGetLastModified<IStoreItem>.PropertyName, true, httpContext.RequestAborted).ConfigureAwait(false);
-                            var lastModified = DateTime.Parse(lastModifiedText, CultureInfo.InvariantCulture);
+                            var lastModified = DateTime.Parse(lastModifiedText ?? string.Empty, CultureInfo.InvariantCulture);
                             if (lastModified != range.If)
                                 range = null;
                         }
@@ -123,7 +123,7 @@ public class GetAndHeadHandler : IRequestHandler
                         if (range != null)
                         {
                             var start = range.Start ?? 0;
-                            var end = Math.Min(range.End ?? long.MaxValue, length-1);
+                            var end = Math.Min(range.End ?? long.MaxValue, length - 1);
                             length = end - start + 1;
 
                             // Write the range
@@ -172,7 +172,7 @@ public class GetAndHeadHandler : IRequestHandler
             // We prefer seeking instead of draining data
             if (!src.CanSeek)
                 throw new IOException("Cannot use range, because the source stream isn't seekable");
-            
+
             src.Seek(start, SeekOrigin.Begin);
         }
 
@@ -192,7 +192,7 @@ public class GetAndHeadHandler : IRequestHandler
             // We're done, if we cannot read any data anymore
             if (bytesRead == 0)
                 return;
-            
+
             // Write the data to the destination stream
             await dest.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
 

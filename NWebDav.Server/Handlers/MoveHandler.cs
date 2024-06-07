@@ -27,7 +27,7 @@ public class MoveHandler : IRequestHandler
         _xmlReaderWriter = xmlReaderWriter;
         _store = store;
     }
-    
+
     /// <summary>
     /// Handle a MOVE request.
     /// </summary>
@@ -43,9 +43,15 @@ public class MoveHandler : IRequestHandler
         // Obtain request and response
         var request = httpContext.Request;
         var response = httpContext.Response;
-        
+
         // We should always move the item from a parent container
         var splitSourceUri = RequestHelper.SplitUri(request.GetUri());
+        if (splitSourceUri is null)
+        {
+            // Source not found
+            response.SetStatus(DavStatusCode.BadRequest);
+            return true;
+        }
 
         // Obtain source collection
         var sourceCollection = await _store.GetCollectionAsync(splitSourceUri.CollectionUri, httpContext.RequestAborted).ConfigureAwait(false);
@@ -84,7 +90,11 @@ public class MoveHandler : IRequestHandler
 
         // We should always move the item to a parent
         var splitDestinationUri = RequestHelper.SplitUri(destinationUri);
-
+        if (splitDestinationUri is null)
+        {
+            response.SetStatus(DavStatusCode.BadRequest, "Destination header is missing or invalid.");
+            return true;
+        }
         // Obtain destination collection
         var destinationCollection = await _store.GetCollectionAsync(splitDestinationUri.CollectionUri, httpContext.RequestAborted).ConfigureAwait(false);
         if (destinationCollection == null)

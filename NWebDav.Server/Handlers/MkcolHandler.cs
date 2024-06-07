@@ -22,7 +22,7 @@ public class MkcolHandler : IRequestHandler
     {
         _store = store;
     }
-    
+
     /// <summary>
     /// Handle a MKCOL request.
     /// </summary>
@@ -41,6 +41,12 @@ public class MkcolHandler : IRequestHandler
 
         // The collection must always be created inside another collection
         var splitUri = RequestHelper.SplitUri(request.GetUri());
+        if (splitUri is null)
+        {
+            // Source not found
+            response.SetStatus(DavStatusCode.BadRequest);
+            return true;
+        }
 
         // Obtain the parent entry
         var collection = await _store.GetCollectionAsync(splitUri.CollectionUri, httpContext.RequestAborted).ConfigureAwait(false);

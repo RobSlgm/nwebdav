@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using NWebDav.Server.Helpers;
 using NWebDav.Server.Stores;
@@ -55,7 +56,7 @@ public class PropPatchHandler : IRequestHandler
                     if (xActualProperty != null)
                     {
                         // Determine the new property value
-                        object newValue;
+                        object? newValue;
                         if (xElement.Name == WebDavNamespaces.DavNs + "set")
                         {
                             // If the descendant is XML, then use the XElement, otherwise use the string
@@ -67,7 +68,7 @@ public class PropPatchHandler : IRequestHandler
                         }
 
                         // Add the property
-                        _propertySetters.Add(new PropSet(xActualProperty.Name, newValue));
+                        _propertySetters.Add(new PropSet(xActualProperty.Name, newValue ?? ""));
                     }
                 }
             }
@@ -110,7 +111,7 @@ public class PropPatchHandler : IRequestHandler
 
         // Obtain item
         var item = await _store.GetItemAsync(request.GetUri(), httpContext.RequestAborted).ConfigureAwait(false);
-        if (item == null)
+        if (item is null)
         {
             response.SetStatus(DavStatusCode.NotFound);
             return true;
@@ -122,6 +123,8 @@ public class PropPatchHandler : IRequestHandler
         {
             // Create an XML document from the stream
             var xDoc = await _xmlReaderWriter.LoadXmlDocumentAsync(request, httpContext.RequestAborted).ConfigureAwait(false);
+            ArgumentNullException.ThrowIfNull(xDoc, "xml");
+            ArgumentNullException.ThrowIfNull(xDoc.Root, "xml");
 
             // Create an XML document from the stream
             propSetCollection = new PropSetCollection(xDoc.Root);
@@ -139,7 +142,7 @@ public class PropPatchHandler : IRequestHandler
             DavStatusCode result;
             try
             {
-                result = await item.PropertyManager.SetPropertyAsync(item, propSet.Name, propSet.Value, httpContext.RequestAborted).ConfigureAwait(false);
+                result = item.PropertyManager is not null ? await item.PropertyManager.SetPropertyAsync(item, propSet.Name, propSet.Value, httpContext.RequestAborted).ConfigureAwait(false) : DavStatusCode.NotImplemented;
             }
             catch (Exception)
             {

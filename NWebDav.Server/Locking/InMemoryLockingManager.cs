@@ -62,7 +62,7 @@ public class InMemoryLockingManager : LockingManager
         new(LockScope.Shared, LockType.Write)
     };
 
-    protected override LockResult Lock(IStoreItem item, LockType lockType, LockScope lockScope, XElement owner, Uri lockRootUri, bool recursive, IEnumerable<int> timeouts) 
+    protected override LockResult Lock(IStoreItem item, LockType lockType, LockScope lockScope, XElement owner, Uri lockRootUri, bool recursive, IEnumerable<int> timeouts)
     {
         // Determine the expiration based on the first time-out
         var timeout = timeouts.Cast<int?>().FirstOrDefault();
@@ -267,8 +267,11 @@ public class InMemoryLockingManager : LockingManager
         return new ActiveLock(itemLockInfo.Type, itemLockInfo.Scope, itemLockInfo.Recursive ? int.MaxValue : 0, itemLockInfo.Owner, itemLockInfo.Timeout, new Uri($"{TokenScheme}:{itemLockInfo.Token:D}"), itemLockInfo.LockRootUri);
     }
 
-    private static Guid? GetTokenFromLockToken(Uri lockTokenUri)
+    private static Guid? GetTokenFromLockToken(Uri? lockTokenUri)
     {
+        if (lockTokenUri is null)
+            return null;
+
         // We should always use opaquetokens
         if (lockTokenUri.Scheme != TokenScheme)
             return null;

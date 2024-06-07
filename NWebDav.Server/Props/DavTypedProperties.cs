@@ -16,7 +16,7 @@ namespace NWebDav.Server.Props;
 /// CLR type.
 /// </summary>
 /// <remarks>
-/// A dedicated converter should be implemented to convert the property 
+/// A dedicated converter should be implemented to convert the property
 /// value to/from an XML value. This class supports both synchronous and
 /// asynchronous accessor methods. To improve scalability, it is
 /// recommended to use the asynchronous methods for properties that require
@@ -51,7 +51,7 @@ public abstract class DavTypedProperty<TEntry, TType> : DavProperty<TEntry> wher
         /// compatible with the requesting WebDAV client.
         /// </remarks>
         object ToXml(TType value);
-            
+
         /// <summary>
         /// Get the typed value of the specified XML representation.
         /// </summary>
@@ -187,12 +187,12 @@ public abstract class DavRfc1123Date<TEntry> : DavTypedProperty<TEntry, DateTime
 public abstract class DavIso8601Date<TEntry> : DavTypedProperty<TEntry, DateTime> where TEntry : IStoreItem
 {
     private readonly Iso8601DateConverter _converter;
-        
+
     protected DavIso8601Date(IHttpContextAccessor httpContextAccessor)
     {
         _converter = new Iso8601DateConverter(httpContextAccessor);
     }
-        
+
     private class Iso8601DateConverter : IConverter
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -201,7 +201,7 @@ public abstract class DavIso8601Date<TEntry> : DavTypedProperty<TEntry, DateTime
         {
             _httpContextAccessor = httpContextAccessor;
         }
-            
+
         public object ToXml(DateTime value)
         {
             // The older built-in Windows WebDAV clients have a problem, so
@@ -210,7 +210,7 @@ public abstract class DavIso8601Date<TEntry> : DavTypedProperty<TEntry, DateTime
             if (HasIso8601FractionBug)
             {
                 // We need to recreate the date again, because the Windows 7
-                // WebDAV client cannot 
+                // WebDAV client cannot
                 var dt = new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, value.Millisecond, DateTimeKind.Utc);
                 return XmlConvert.ToString(dt, XmlDateTimeSerializationMode.Utc);
             }
@@ -249,7 +249,7 @@ public abstract class DavBoolean<TEntry> : DavTypedProperty<TEntry, bool> where 
     private class BooleanConverter : IConverter
     {
         public object ToXml(bool value) => value ? "1" : "0";
-        public bool FromXml(object value) => int.Parse(value.ToString()) != 0;
+        public bool FromXml(object value) => int.Parse(value?.ToString() ?? string.Empty) != 0;
     }
 
     public static IConverter TypeConverter { get; } = new BooleanConverter();
@@ -272,7 +272,7 @@ public abstract class DavString<TEntry> : DavTypedProperty<TEntry, string> where
     private class StringConverter : IConverter
     {
         public object ToXml(string value) => value;
-        public string FromXml(object value) => value.ToString();
+        public string FromXml(object value) => value?.ToString() ?? string.Empty;
     }
 
     public static IConverter TypeConverter { get; } = new StringConverter();
@@ -295,7 +295,7 @@ public abstract class DavInt32<TEntry> : DavTypedProperty<TEntry, int> where TEn
     private class Int32Converter : IConverter
     {
         public object ToXml(int value) => value.ToString(CultureInfo.InvariantCulture);
-        public int FromXml(object value) => int.Parse(value.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture);
+        public int FromXml(object value) => int.Parse(value?.ToString() ?? string.Empty, NumberStyles.Integer, CultureInfo.InvariantCulture);
     }
 
     public static IConverter TypeConverter { get; } = new Int32Converter();
@@ -318,7 +318,7 @@ public abstract class DavInt64<TEntry> : DavTypedProperty<TEntry, long> where TE
     private class Int64Converter : IConverter
     {
         public object ToXml(long value) => value.ToString(CultureInfo.InvariantCulture);
-        public long FromXml(object value) => int.Parse(value.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture);
+        public long FromXml(object value) => int.Parse(value?.ToString() ?? string.Empty, NumberStyles.Integer, CultureInfo.InvariantCulture);
     }
 
     public static IConverter TypeConverter { get; } = new Int64Converter();

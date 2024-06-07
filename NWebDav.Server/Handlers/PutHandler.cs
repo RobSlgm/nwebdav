@@ -22,7 +22,7 @@ public class PutHandler : IRequestHandler
     {
         _store = store;
     }
-    
+
     /// <summary>
     /// Handle a PUT request.
     /// </summary>
@@ -41,6 +41,12 @@ public class PutHandler : IRequestHandler
 
         // It's not a collection, so we'll try again by fetching the item in the parent collection
         var splitUri = RequestHelper.SplitUri(request.GetUri());
+        if (splitUri is null)
+        {
+            // Source not found
+            response.SetStatus(DavStatusCode.BadRequest);
+            return true;
+        }
 
         // Obtain collection
         var collection = await _store.GetCollectionAsync(splitUri.CollectionUri, httpContext.RequestAborted).ConfigureAwait(false);

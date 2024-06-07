@@ -20,11 +20,11 @@ public class BasicAuthenticationHandler : AuthenticationHandler<BasicAuthenticat
 {
     private readonly ILogger<BasicAuthenticationHandler> _logger;
 
-    public BasicAuthenticationHandler(IOptionsMonitor<BasicAuthenticationOptions> options, ILoggerFactory loggerFactory, UrlEncoder encoder, ISystemClock clock) : base(options, loggerFactory, encoder, clock)
+    public BasicAuthenticationHandler(IOptionsMonitor<BasicAuthenticationOptions> options, ILoggerFactory loggerFactory, UrlEncoder encoder) : base(options, loggerFactory, encoder)
     {
         _logger = loggerFactory.CreateLogger<BasicAuthenticationHandler>();
     }
-    
+
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         if (!Request.IsHttps && !Options.AllowInsecureProtocol)
@@ -37,8 +37,8 @@ public class BasicAuthenticationHandler : AuthenticationHandler<BasicAuthenticat
         if (cachedCredential != null)
             return AuthenticateResult.Success(new AuthenticationTicket(cachedCredential, Scheme.Name));
 
-        var events = (BasicAuthenticationEvents)base.Events!; 
-        
+        var events = (BasicAuthenticationEvents)base.Events!;
+
         foreach (var authHeader in Request.Headers.Authorization)
         {
             if (!AuthenticationHeaderValue.TryParse(authHeader, out var auth)) continue;
@@ -60,7 +60,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<BasicAuthenticat
                     return AuthenticateResult.Success(validateContext.Result.Ticket);
                 }
 
-                var exc = validateContext.Result.Failure; 
+                var exc = validateContext.Result.Failure;
                 if (exc != null)
                 {
                     _logger.LogTrace(exc, "Failed to authenticate user '{Username}'", username);
@@ -70,7 +70,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<BasicAuthenticat
             catch (Exception exc)
             {
                 _logger.LogTrace(exc, "Failed to authenticate user '{Username}'", username);
-                
+
                 var failContext = new BasicAuthenticationFailedContext(Context, Scheme, Options)
                 {
                     Exception = exc
@@ -113,7 +113,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<BasicAuthenticat
                 if (separatorIndex > 0)
                 {
                     username = nameAndPassword[..separatorIndex];
-                    password = nameAndPassword[(separatorIndex+1)..];
+                    password = nameAndPassword[(separatorIndex + 1)..];
                     return true;
                 }
             }
@@ -140,7 +140,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<BasicAuthenticat
             _logger.LogTrace("Cache Cookie '{CookieName}' not in request", Options.CacheCookieName);
             return null;
         }
-        
+
         try
         {
             var unprotectedBytes = DataProtector.Unprotect(Convert.FromBase64String(cachedCookieValue));
