@@ -10,3 +10,5 @@ Certificates/
 **/*.lock.json
 **/*.user
 **/*.userprefs
+
+artifacts/
